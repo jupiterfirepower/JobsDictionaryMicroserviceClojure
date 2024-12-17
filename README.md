@@ -43,4 +43,18 @@ Once the image it built, it's cached.  To delete the image and build a new one:
 
 ## Links
 * [Other Pedestal examples](http://pedestal.io/samples)
-# JobsDictionaryMicroserviceClojure
+
+# How to test with dev keys and settings.
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" \
+-A "JobsSpecialUserAgent" \
+--header "x-api-key: VBPIIxCie9VjWpMTs5JF8vg3WJlXROcEj/DS4yjOnNjzEy845O9glH7GSSJmaW0NUfjTWZYtTgIxOikh7KxBVXQjgMyETbXVkmFHGsOz5oE=" \
+--header "x-api-secret: xjVuDYqL/kVyHMBrkZLMLDvEbvY6bSgf09QZWk4z/hirdC2W1559feHepwwe4LLNiCmzB/QunzlnQAtzXQsHbwNBJHKpI323DbPB5iTMxVo=" \
+--header "s-nonce: LzgH9sZy3zTshDjwsXF4LyHNlRjbf4EGzfHvAhT6g9nLHexRLEOEZKpzH53kZFQzo0LZCu+FVVfTNtWBPBV4NK5hBSUXoMVY14nFKPMMnwcTcsTx2TAxMmMoW9ZmnevU" \
+http://localhost:8080/wtypes
+
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" \
+-A "JobsSpecialUserAgent" \
+--header "x-api-key: VBPIIxCie9VjWpMTs5JF8vg3WJlXROcEj/DS4yjOnNjzEy845O9glH7GSSJmaW0NUfjTWZYtTgIxOikh7KxBVXQjgMyETbXVkmFHGsOz5oE=" \
+--header "x-api-secret: xjVuDYqL/kVyHMBrkZLMLDvEbvY6bSgf09QZWk4z/hirdC2W1559feHepwwe4LLNiCmzB/QunzlnQAtzXQsHbwNBJHKpI323DbPB5iTMxVo=" \
+--header "s-nonce: LzgH9sZy3zTshDjwsXF4LyHNlRjbf4EGzfHvAhT6g9nLHexRLEOEZKpzH53kZFQzo0LZCu+FVVfTNtWBPBV4NK5hBSUXoMVY14nFKPMMnwcTcsTx2TAxMmMoW9ZmnevU" \
+http://localhost:8080/etypes
