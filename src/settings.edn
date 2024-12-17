@@ -1,0 +1,15 @@
+{
+  :postgresdb {  :dbtype "postgresql"
+                 :dbname "jobs_db"
+                 :host "localhost"
+                 :user "admin"
+                 :password "newpwd" }
+
+  :secrets    {  :dictsecret "9478b869b379427b48d5e76eeca02dcc"
+                 :dictakey "16de814afaf3a815a8b6a9e99410c5c8"
+                 :aes-iv  "VIU5X1F2S+4Z2XmV1Kh6fQ=="
+                 :aes-key "3l6gbk2uCyHEfXHSEmA5/Jj0YkVN8hbDOqHg6noBT+G82urT7y+elvxqAlOWeQ/gv4DY44Z4wodC5IrHOCFMtA=="
+                 :user-agent "JobsSpecialUserAgent"
+                 :akey-window "15"
+              }
+}
