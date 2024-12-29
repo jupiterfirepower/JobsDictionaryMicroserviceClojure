@@ -20,6 +20,8 @@
             [jobs-dict-api.secapi :as sapi]
             [jobs-dict-api.inceptors :as incp]
             [clojure.edn :as edn]
+            [keycloak.deployment :as kc-deploy :refer [deployment client-conf]]
+            [keycloak.backend :as kc-backend]
             [clojure.core.async :as async
              :refer [>! <! >!! <!! go chan buffer close! alts!! take!]]
             ))
@@ -31,18 +33,59 @@
 
 ;;(def ^:const str_empty "")
 
+(def keycloak-deployment (kc-deploy/deployment (kc-deploy/client-conf {:auth-server-url "http://localhost:9001/"
+                                                                       :admin-realm      "master"
+                                                                       :realm            "mjobs"
+                                                                       :admin-username   "admin"
+                                                                       :admin-password   "newpwd"
+                                                                       :client-admin-cli "admin-cli"
+                                                                       :client-id        "cjobs"
+                                                                       :client-secret    "kv2wKUxSl4QufRt4D7p7YwlJOuLhjyWV"})))
+
+(defn is-keycloak-token-valid [token]
+      (try
+          (let [ extracted_token (kc-backend/verify-then-extract keycloak-deployment token)
+                 user_name (:username extracted_token) 
+                 user_email (:email extracted_token) ] 
+            (prn extracted_token)
+            (prn (format "user_name-%s, email: %s" user_name user_email))
+          true)
+     (catch IllegalArgumentException e
+            (prn "catch e IllegalArgumentException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenNotActiveException e
+            (prn "catch e TokenNotActiveException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenVerificationException e
+            (prn "catch e TokenVerificationException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenSignatureInvalidException e
+            (prn "catch e TokenSignatureInvalidException: " e) 
+            false)       
+     (catch clojure.lang.ExceptionInfo e
+            (prn "catch e clojure.lang.ExceptionInfo: " e) 
+            false)
+     (catch Exception e 
+            (prn "catch e Exception: " e) 
+            false)))
+                                                                             
+
 (defn get-headers-new
   [request]
   (let [ ua_valid (sapi/is-useragent-valid request)
          apk (sapi/is-apikey-valid request)
          skk_valid (sapi/is-secret-valid request)
          nonce_valid (sapi/is-nonce-valid request)
+         token (sapi/get-keycloak-token request)
+         ktoken_valid (is-keycloak-token-valid token)
        ] 
+       ;;(prn request)
        (prn ua_valid)
        (prn apk)
        (prn skk_valid)
        (prn nonce_valid)
-       (every? true? [ua_valid (:valid apk) skk_valid nonce_valid])))
+       (prn ktoken_valid)
+       (every? true? [ua_valid (:valid apk) skk_valid nonce_valid ktoken_valid])))
 
 (defn get-http-status
     [valid]
@@ -95,34 +138,6 @@
   (let [req_valid (get-headers-new request)
         result (if (= req_valid true) (jdbc/execute! db ["select * from fn_get_empltypes()"]) nil)]
       (response_with_status req_valid (json/write-str result))))
-
-;;(defn wtype-data
-;;  [request]
-;;  (get-headers-new request)
-;;  (let [result (jdbc/execute! db ["select * from fn_get_worktypes()"])] ;; this variable shadows the global
-;;       (ring-resp/response (json/write-str result))))
-
-;;(defn etype-data
-;;  [request]
-;;  (get-headers-new request)
-;;  (let [result (jdbc/execute! db ["select * from fn_get_empltypes()"])] ;; this variable shadows the global
-;;       (ring-resp/response (json/write-str result))))
-
-(defn get-wtype-async
-  [request]
-  (async/go
-     (get-headers-new request)
-     (async/<! (async/timeout 1000))
-     (let [result (jdbc/execute! db ["select * from fn_get_worktypes()"])] 
-        result)))
-
-(def takes-time
-  {:name ::takes-time
-   :enter (fn [context]
-            (go
-              (let [result (<! (get-wtype-async (:request context)))]
-                (assoc context :response {:status 200
-                                          :body result}))))})
 
 ;; Defines "/" and "/about" routes with their associated :get handlers.
 ;; The interceptors defined after the verb map (e.g., {:get home-page}
@@ -185,11 +200,18 @@
               ::http/port 8080
               ;; Options to pass to the container (Jetty)
               ::http/container-options {:h2c? true
-                                        :h2? false
+                                        ;;:h2? true
                                         ;:keystore "test/hp/keystore.jks"
                                         ;:key-password "password"
-                                        ;:ssl-port 8443
-                                        :ssl? false
+                                        ;;:http3 true  ;; enable http/3 support
+                                        ;;:http3-pem-work-directory "/some/path" ;; a pre-created directory for quic configuration
+                                        ;;:ssl-port 5443 ;; ssl-port is used by http/3
+                                        ;;:http2 true
+                                        :ssl-port 8443
+                                        :ssl? true
+                                        :keystore "resources/devjetty.jks"
+                                        :key-password "dfvgbh12345"
+                                        :keystore-type "jks"
                                         ;; Alternatively, You can specify your own Jetty HTTPConfiguration
                                         ;; via the `:io.pedestal.http.jetty/http-configuration` container option.
                                         ;:io.pedestal.http.jetty/http-configuration (org.eclipse.jetty.server.HttpConfiguration.)

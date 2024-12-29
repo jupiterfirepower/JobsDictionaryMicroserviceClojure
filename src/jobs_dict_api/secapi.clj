@@ -38,6 +38,20 @@
        (prn (format "uagent-%s" uagent))
        ua_valid))
 
+(defn get-keycloak-token
+  [request]
+  (try
+     (let [ result (:headers request)
+            token_bearer (if (contains? result "authorization") (result "authorization") str_empty)
+            token (second (clojure.string/split  token_bearer #" "))
+          ] 
+       (prn (format "token-%s" token))
+       token)
+     (catch clojure.lang.ExceptionInfo e
+            str_empty)
+     (catch Exception e ;;(prn "catch e: " e)
+            str_empty)))
+
 (defn is-apikey-valid
   [request]
   (try
