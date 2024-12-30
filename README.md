@@ -1,6 +1,19 @@
 # jobs-dict-api
+Clojure Microservice technologies stack:</br>
+Pedestal</br>
+buddy</br>
+next.jdbc</br>
+java.jdbc</br>
 
-FIXME
+databases:</br>
+datomic(only for unit tests and dev)</br>
+sqlite(production mode)</br>
+postgresql(production mode)</br>
+
+Keycloak</br>
+(keycloak-clojure library)</br>
+json</br>
+web api</br>
 
 ## Getting Started
 
