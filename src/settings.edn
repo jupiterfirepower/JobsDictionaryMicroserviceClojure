@@ -12,4 +12,14 @@
                  :user-agent "JobsSpecialUserAgent"
                  :akey-window "15"
               }
+
+  :keycloak   { :auth-server-url  "http://localhost:9001/"
+                :admin-realm      "master"
+                :realm            "mjobs"
+                :admin-username   "admin"
+                :admin-password   "newpwd"
+                :client-admin-cli "admin-cli"
+                :client-id        "cjobs"
+                :client-secret    "kv2wKUxSl4QufRt4D7p7YwlJOuLhjyWV"}
+              }
 }

@@ -4,12 +4,55 @@
              [buddy.core.codecs :as codecs]
              [clojure.data.codec.base64 :as b64]
              [next.jdbc :as jdbc]
+             [keycloak.deployment :as kc-deploy :refer [deployment client-conf]]
+             [keycloak.backend :as kc-backend]
              [jobs-dict-api.nonce :as nonce]))
 
 (def ^:const str_empty "")
 
 (def settings
     (clojure.edn/read-string (slurp "src/settings.edn")))
+
+(def keycloak-settings
+     (:keycloak settings))
+
+;;(def ^:const str_empty "")
+
+(def keycloak-deployment (kc-deploy/deployment (kc-deploy/client-conf {:auth-server-url  (:auth-server-url keycloak-settings)
+                                                                       :admin-realm      (:admin-realm keycloak-settings)
+                                                                       :realm            (:realm keycloak-settings)
+                                                                       :admin-username   (:admin-username keycloak-settings)
+                                                                       :admin-password   (:admin-password  keycloak-settings)
+                                                                       :client-admin-cli (:client-admin-cli  keycloak-settings)
+                                                                       :client-id        (:client-id  keycloak-settings)
+                                                                       :client-secret    (:client-secret  keycloak-settings)})))
+
+(defn is-keycloak-token-valid [token]
+      (try
+          (let [ extracted_token (kc-backend/verify-then-extract keycloak-deployment token)
+                 user_name (:username extracted_token) 
+                 user_email (:email extracted_token) ] 
+            ;;(prn extracted_token)
+            (prn (format "user_name-%s, email: %s" user_name user_email))
+          true)
+     (catch IllegalArgumentException e
+            (prn "catch e IllegalArgumentException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenNotActiveException e
+            (prn "catch e TokenNotActiveException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenVerificationException e
+            (prn "catch e TokenVerificationException: " e) 
+            false)
+     (catch org.keycloak.exceptions.TokenSignatureInvalidException e
+            (prn "catch e TokenSignatureInvalidException: " e) 
+            false)       
+     (catch clojure.lang.ExceptionInfo e
+            (prn "catch e clojure.lang.ExceptionInfo: " e) 
+            false)
+     (catch Exception e 
+            (prn "catch e Exception: " e) 
+            false)))
 
 (def secret-key-value
     (:dictsecret (:secrets settings)))
