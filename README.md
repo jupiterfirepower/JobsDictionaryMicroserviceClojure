@@ -69,7 +69,7 @@ curl -i -H "Accept: application/json" -H "Content-Type: application/json" -H "Au
 -A "JobsSpecialUserAgent" \</br>
 --header "x-api-key: VBPIIxCie9VjWpMTs5JF8vg3WJlXROcEj/DS4yjOnNjzEy845O9glH7GSSJmaW0NUfjTWZYtTgIxOikh7KxBVXQjgMyETbXVkmFHGsOz5oE=" \</br>
 --header "x-api-secret: xjVuDYqL/kVyHMBrkZLMLDvEbvY6bSgf09QZWk4z/hirdC2W1559feHepwwe4LLNiCmzB/QunzlnQAtzXQsHbwNBJHKpI323DbPB5iTMxVo=" \</br>
---header "s-nonce: LzgH9sZy3zTshDjwsXF4LyHNlRjbf4EGzfHvAhT6g9nLHexRLEOEZKpzH53kZFQzo0LZCu+FVVfTNtWBPBV4NK5hBSUXoMVY14nFKPMMnwcTcsTx2TAxMmMoW9ZmnevU" \</br>
+--header "s-nonce: LzgH9sZy3zTshDjwsXF4LyHNlRjbf4EGzfHvAhT6g9nLHexRLEOEZKpzH53kZFQzo0LZCu+FVVfTNtWBPBV4NK5hBSUXoMVY14nFKPMMnwcTcsTx2TAxMmMoW9ZmnevU" \
 http://localhost:8080/wtypes</br>
 HTTP/1.1 200 OK</br>
 Date: Tue, 17 Dec 2024 13:32:15 GMT</br>
