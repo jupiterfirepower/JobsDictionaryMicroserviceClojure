@@ -15,6 +15,15 @@ Keycloak</br>
 json</br>
 web api</br>
 
+Web Api security: </br>
+1) Check UserAgent only trusted secret(special) agent can request service methods. </br>
+2) Api-key(random generated for one request) saved in db on microservice - crypted </br>
+3) Nonce with secret sign - crypted </br>
+4) Secret key - crypted </br>
+5) Keyckloak token for logged user. (Authentication) </br>
+6) Cors </br>
+7) Rate Limiting </br>
+</br>
 ## Getting Started
 
 1. Start the application: `lein run`

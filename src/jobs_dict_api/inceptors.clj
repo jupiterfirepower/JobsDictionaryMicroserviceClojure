@@ -2,7 +2,11 @@
   (:require [io.pedestal.interceptor :as interceptor]
             [jobs-dict-api.uuid :as gen]
             [clojure.data.json :as json]
-            [io.pedestal.http.content-negotiation :as content-negotiation]))
+            [io.pedestal.http.content-negotiation :as content-negotiation]
+            [io.staticweb.rate-limit.middleware :refer [ip-rate-limit wrap-rate-limit]]
+            [io.staticweb.rate-limit.storage :as storage]
+            [io.staticweb.rate-limit.quota-state :as quota-state]
+            ))
 
 (def content-length-json-body
   (interceptor/interceptor
@@ -60,3 +64,29 @@
      (cond-> context
        (nil? (get-in context [:response :headers "Content-Type"])) 
        (update-in [:response] coerce-to (accepted-type context))))})
+
+(def settings
+    (clojure.edn/read-string (slurp "src/settings.edn")))
+
+(def ratelimit-settings
+     (:ratelimit settings))
+
+(def storage (storage/local-storage))
+
+;; Define the rate limit: 1 req/s per IP address
+(def limit (ip-rate-limit :limit-id (Long/parseLong (:limit-id ratelimit-settings)) (java.time.Duration/ofSeconds 60))) ;;(t/seconds 5)
+
+;; Define the middleware configuration
+(def rate-limit-config {:storage storage :limit limit})
+
+(def rate-limit-interceptor
+  "Adds rate limit info to context."
+  (interceptor/interceptor
+    {:name ::rate-limit
+     :enter (fn [ctx]
+              (let [quota-state (quota-state/read-quota-state storage limit (:request ctx))]
+                (if (quota-state/quota-exhausted? quota-state)
+                  (assoc ctx :response (quota-state/build-error-response quota-state (:response ctx)))
+                  (do
+                    (quota-state/increment-counter quota-state storage)
+                    (assoc ctx :rate-limit-details (quota-state/rate-limit-response quota-state {}))))))}))

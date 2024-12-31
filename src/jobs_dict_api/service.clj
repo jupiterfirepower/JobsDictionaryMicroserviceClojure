@@ -47,11 +47,11 @@
        (every? true? [ua_valid (:valid apk) skk_valid nonce_valid ktoken_valid])))
 
 (defn get-http-status
-    [valid]
+    [request_valid]
     (cond
-      (= valid true) 200
-      (= valid false) 400
-       :else 500))
+      (= request_valid true) 200 ;; pass all security checks.
+      (= request_valid false) 400 ;; Bad request failed security checks.(at least one)
+       :else 500)) ;; Internal Server Error.
 
 (defn response_with_status [request_valid body]
   {:status (get-http-status request_valid) 
@@ -85,8 +85,8 @@
 ;; Defines "/" and "/about" routes with their associated :get handlers.
 ;; The interceptors defined after the verb map (e.g., {:get home-page}
 ;; apply to / and its children (/about).
-(def common-interceptors [(body-params/body-params) http/html-body])
-(def custom-interceptors [incp/coerce-body-interceptor incp/content-negotiation-interceptor (body-params/body-params) incp/content-length-json-body])
+(def common-interceptors [(body-params/body-params) http/html-body]) ;; incp/rate-limit-interceptor
+(def custom-interceptors [incp/coerce-body-interceptor incp/content-negotiation-interceptor (body-params/body-params) incp/content-length-json-body incp/rate-limit-interceptor])
 
 ;; Tabular routes
 (def routes #{;;["/" :get (conj common-interceptors `home-page)]

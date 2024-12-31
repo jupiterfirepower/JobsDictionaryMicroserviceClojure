@@ -21,5 +21,7 @@
                 :client-admin-cli "admin-cli"
                 :client-id        "cjobs"
                 :client-secret    "kv2wKUxSl4QufRt4D7p7YwlJOuLhjyWV"}
+  :ratelimit  { 
+                :limit-id         "100"
               }
 }

@@ -15,6 +15,8 @@
                  ;; ---------------------------------
                  ;;[metosin/porsas "0.0.1-alpha13"]
                  ;; ---------------------------------
+                 ;;[alaisi/postgres.async "0.8.0"]
+                 [io.staticweb/rate-limit "1.1.0"]
                  [likid_geimfari/secrets "2.1.1"]
                  [cheshire "5.13.0"]
                  [org.clojure/core.async "1.6.681"]
