@@ -27,6 +27,7 @@
                  [cljc.java-time "0.1.18"]
                  [org.clojure/data.codec "0.1.1"]
                  [buddy/buddy-core "1.11.423"]
+                 [org.clojars.amjil/buddy-auth "2.1.0"]
                  [com.datomic/datomic-free "0.9.5697"]
                  [ch.qos.logback/logback-classic "1.4.6"]
                  [keycloak-clojure "1.31.2"]

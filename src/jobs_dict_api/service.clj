@@ -16,6 +16,7 @@
             [jobs-dict-api.crypt :as crypt]
             [buddy.core.codecs :as codecs]
             [buddy.core.hash :as hash]
+            [buddy.auth :refer [authenticated? throw-unauthorized]]
             ;;[clojure.pprint :as p]
             [jobs-dict-api.secapi :as sapi]
             [jobs-dict-api.inceptors :as incp]
@@ -72,9 +73,12 @@
 
 (defn wtype-data
   [request]
+  (prn (:identity request))
   (let [req_valid (get-headers-new request)
-        result (if (= req_valid true) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
-      (response_with_status req_valid (json/write-str result))))
+        req_auth (authenticated? request)
+        result (if (and (= req_valid true) (= req_auth true)) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
+        (response_with_status req_valid (json/write-str result))))
+    
 
 (defn etype-data
   [request]
@@ -86,7 +90,7 @@
 ;; The interceptors defined after the verb map (e.g., {:get home-page}
 ;; apply to / and its children (/about).
 (def common-interceptors [(body-params/body-params) http/html-body]) ;; incp/rate-limit-interceptor
-(def custom-interceptors [incp/coerce-body-interceptor incp/content-negotiation-interceptor (body-params/body-params) incp/content-length-json-body incp/rate-limit-interceptor])
+(def custom-interceptors [incp/coerce-body-interceptor incp/content-negotiation-interceptor incp/authentication-interceptor (body-params/body-params) incp/content-length-json-body incp/rate-limit-interceptor])
 
 ;; Tabular routes
 (def routes #{;;["/" :get (conj common-interceptors `home-page)]

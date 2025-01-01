@@ -54,6 +54,33 @@
             (prn "catch e Exception: " e) 
             false)))
 
+(defn get-keycloak-user-by-token [token]
+      (try
+          (let [ extracted_token (kc-backend/verify-then-extract keycloak-deployment token)
+                 user_name (:username extracted_token) 
+                 user_email (:email extracted_token) ] 
+            ;;(prn extracted_token)
+            (prn (format "user_name-%s, email: %s" user_name user_email))
+          user_email)
+     (catch IllegalArgumentException e
+            (prn "catch e IllegalArgumentException: " e) 
+            nil)
+     (catch org.keycloak.exceptions.TokenNotActiveException e
+            (prn "catch e TokenNotActiveException: " e) 
+            nil)
+     (catch org.keycloak.exceptions.TokenVerificationException e
+            (prn "catch e TokenVerificationException: " e) 
+            nil)
+     (catch org.keycloak.exceptions.TokenSignatureInvalidException e
+            (prn "catch e TokenSignatureInvalidException: " e) 
+            nil)       
+     (catch clojure.lang.ExceptionInfo e
+            (prn "catch e clojure.lang.ExceptionInfo: " e) 
+            nil)
+     (catch Exception e 
+            (prn "catch e Exception: " e) 
+            nil)))
+
 (def secret-key-value
     (:dictsecret (:secrets settings)))
 

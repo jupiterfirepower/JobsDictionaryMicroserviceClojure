@@ -6,6 +6,11 @@
             [io.staticweb.rate-limit.middleware :refer [ip-rate-limit wrap-rate-limit]]
             [io.staticweb.rate-limit.storage :as storage]
             [io.staticweb.rate-limit.quota-state :as quota-state]
+            ;;[buddy.auth :as auth]
+            [buddy.auth.backends :as auth.backends]
+            [buddy.auth.backends.token :refer [token-backend]]
+            [buddy.auth.middleware :as auth.middleware]
+            [jobs-dict-api.secapi :as sapi]
             ))
 
 (def content-length-json-body
@@ -90,3 +95,22 @@
                   (do
                     (quota-state/increment-counter quota-state storage)
                     (assoc ctx :rate-limit-details (quota-state/rate-limit-response quota-state {}))))))}))
+
+(defn keycloak-authfn
+  [req token]
+  (let [token (sapi/get-keycloak-token req)
+        user_email (sapi/get-keycloak-user-by-token token) ]
+      user_email))
+
+;; Create an instance of auth backend.
+
+(def auth-backend
+  (token-backend {:authfn keycloak-authfn :token-name "Bearer"})) ;;
+
+
+(def authentication-interceptor
+  "Port of buddy-auth's wrap-authentication middleware."
+  (interceptor/interceptor
+   {:name ::authenticate
+    :enter (fn [ctx]
+             (update ctx :request auth.middleware/authentication-request auth-backend))}))
