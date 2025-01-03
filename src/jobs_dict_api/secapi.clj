@@ -170,3 +170,20 @@
                                         (prn "incorrect secret not decrypted")
                                         false)
      (catch Exception e false)))
+
+(defn validate-headers-value
+  [request]
+  (let [ ua_valid (is-useragent-valid request)
+         apk (is-apikey-valid request)
+         skk_valid (is-secret-valid request)
+         nonce_valid (is-nonce-valid request)
+         token (get-keycloak-token request)
+         ktoken_valid (is-keycloak-token-valid token)
+       ] 
+       ;;(prn request)
+       (prn ua_valid)
+       (prn apk)
+       (prn skk_valid)
+       (prn nonce_valid)
+       (prn ktoken_valid)
+       (every? true? [ua_valid (:valid apk) skk_valid nonce_valid ktoken_valid])))

@@ -20,6 +20,7 @@
             ;;[clojure.pprint :as p]
             [jobs-dict-api.secapi :as sapi]
             [jobs-dict-api.inceptors :as incp]
+            [clojure.core.cache.wrapped :as w]
             [clojure.edn :as edn]
             [clojure.core.async :as async
              :refer [>! <! >!! <!! go chan buffer close! alts!! take!]]
@@ -51,7 +52,7 @@
     [request_valid]
     (cond
       (= request_valid true) 200 ;; pass all security checks.
-      (= request_valid false) 400 ;; Bad request failed security checks.(at least one)
+      (= request_valid false) 400 ;; Bad request failed security checks.(at least one failed)
        :else 500)) ;; Internal Server Error.
 
 (defn response_with_status [request_valid body]
@@ -71,15 +72,33 @@
   (prn (format "encrypted-%s"(sapi/to-base64-from-codec "16de814afaf3a815a8b6a9e99410c5c8" aeskey)))
   (prn (format "encrypted-%s"(sapi/to-base64-from-codec "9478b869b379427b48d5e76eeca02dcc" aeskey)))))
 
+;;(defn wtype-data
+;;  [request]
+;;  (prn (:identity request))
+;;  (let [req_valid (get-headers-new request)
+;;        req_auth (authenticated? request)
+;;        result (if (and (= req_valid true) (= req_auth true)) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
+;;        (response_with_status req_valid (json/write-str result))))
+
+(def cache-data (w/fifo-cache-factory { :wtype (jdbc/execute! db ["select * from fn_get_worktypes();"])
+                                        :etype (jdbc/execute! db ["select * from fn_get_empltypes();"]) }))
+
 (defn wtype-data
   [request]
+  (prn request)
   (prn (:identity request))
-  (let [req_valid (get-headers-new request)
-        req_auth (authenticated? request)
-        result (if (and (= req_valid true) (= req_auth true)) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
-        (response_with_status req_valid (json/write-str result))))
-    
+  (prn ":req_valid - " (:req_valid request))
+  (let [req_auth (authenticated? request)
+        result (if (= req_auth true) (w/lookup cache-data :wtype) nil)]
+        (response_with_status req_auth (json/write-str result))))
 
+;;(defn wtype-data
+; ; [request]
+ ;; (prn (:identity request))
+ ;; (let [req_auth (authenticated? request)
+  ;;      result (if (= req_auth true) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
+   ;;     (response_with_status req_auth (json/write-str result))))
+    
 (defn etype-data
   [request]
   (let [req_valid (get-headers-new request)
@@ -90,7 +109,9 @@
 ;; The interceptors defined after the verb map (e.g., {:get home-page}
 ;; apply to / and its children (/about).
 (def common-interceptors [(body-params/body-params) http/html-body]) ;; incp/rate-limit-interceptor
-(def custom-interceptors [incp/coerce-body-interceptor incp/content-negotiation-interceptor incp/authentication-interceptor (body-params/body-params) incp/content-length-json-body incp/rate-limit-interceptor])
+(def custom-interceptors [ incp/rate-limit-interceptor incp/coerce-body-interceptor incp/content-negotiation-interceptor 
+                           incp/check-headers-interceptor incp/validate-headers-interceptor incp/authentication-interceptor 
+                           (body-params/body-params) incp/content-length-json-body ])
 
 ;; Tabular routes
 (def routes #{;;["/" :get (conj common-interceptors `home-page)]

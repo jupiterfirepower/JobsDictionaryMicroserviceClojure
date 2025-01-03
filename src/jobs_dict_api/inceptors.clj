@@ -26,7 +26,14 @@
                     ;; Let's count the bytes instead of the string, in case there are unicode characters
                     content-length (count (.getBytes ^String json-response-body))
                     headers (:headers response { "Content-Type" "application/json;charset=utf-8"
-                                                 "Content-Length" (str content-length) })
+                                                 "Content-Length" (str content-length) 
+                                                 ;;"X-Content-Type-Options" "nosniff"
+                                                 ;;"X-Frame-Options" "deny"
+                                                 ;;"X-XSS-Protection" "0"
+                                                 ;;"Cache-Control" "no-store"
+                                                 ;;"Content-Security-Policy" "script-src 'self'; default-src 'none'; frame-ancestors 'none'; sandbox"
+                                                 ;;"Strict-Transport-Security" "max-age=15552001; includeSubDomains; preload; redirectHttpToHttps=true"
+                                                })
                     newapikey (gen/guid)
                     ]
                 (assoc context
@@ -46,15 +53,13 @@
 
 (defn accepted-type
   [context]
-  (get-in context [:request :accept :field] "text/plain"))
+  (get-in context [:request :accept :field] "application/json"))
 
 (defn transform-content
   [body content-type]
   (case content-type
-    "text/html" body
-    "text/plain" body
-    "application/edn" (pr-str body)
-    "application/json" (json/write-str body)))
+    "application/json" (json/write-str body)
+    "application/edn" (pr-str body)))
 
 (defn coerce-to
   [response content-type]
@@ -88,13 +93,13 @@
   "Adds rate limit info to context."
   (interceptor/interceptor
     {:name ::rate-limit
-     :enter (fn [ctx]
-              (let [quota-state (quota-state/read-quota-state storage limit (:request ctx))]
+     :enter (fn [context]
+              (let [quota-state (quota-state/read-quota-state storage limit (:request context))]
                 (if (quota-state/quota-exhausted? quota-state)
-                  (assoc ctx :response (quota-state/build-error-response quota-state (:response ctx)))
+                  (assoc context :response (quota-state/build-error-response quota-state (:response context)))
                   (do
                     (quota-state/increment-counter quota-state storage)
-                    (assoc ctx :rate-limit-details (quota-state/rate-limit-response quota-state {}))))))}))
+                    (assoc context :rate-limit-details (quota-state/rate-limit-response quota-state {}))))))}))
 
 (defn keycloak-authfn
   [req token]
@@ -112,5 +117,34 @@
   "Port of buddy-auth's wrap-authentication middleware."
   (interceptor/interceptor
    {:name ::authenticate
-    :enter (fn [ctx]
-             (update ctx :request auth.middleware/authentication-request auth-backend))}))
+    :enter (fn [context]
+             (update context :request auth.middleware/authentication-request auth-backend))}))
+
+(def check-headers-interceptor
+  "Check headers keys."
+  (interceptor/interceptor
+    {:name ::check-headers
+     :enter (fn [context]
+              (let [request (:request context)
+                    headers (:headers (:request context))
+                    is_user_agent (contains? headers "user-agent")
+                    is_auth (contains? headers "authorization")
+                    is_x_api_key (contains? headers "x-api-key")
+                    is_x_api_secret (contains? headers "x-api-secret")
+                    is_s_nonce (contains? headers "s-nonce")
+                    is_valid (every? true? [is_user_agent is_auth is_x_api_key is_x_api_secret is_s_nonce])
+                    req (assoc request :req_valid is_valid)
+                    ]
+                (assoc-in context [:request] req)))}))
+
+(def validate-headers-interceptor
+  "Validate headers values."
+  (interceptor/interceptor
+    {:name ::validate-headers
+     :enter (fn [context]
+              (let [request (:request context)
+                    req_valid (:req_valid request)
+                    is_req_valid (sapi/validate-headers-value (:request context))
+                    req (assoc request :req_valid (and req_valid is_req_valid))
+                    ]
+                (assoc-in context [:request] req)))}))
