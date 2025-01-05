@@ -1,0 +1,31 @@
+{
+  :postgresdb {  :dbtype "postgresql"
+                 :dbname "jobs_db"
+                 :host "localhost"
+                 :user "admin"
+                 :password "newpwd" }
+
+  :secrets    {  :dictsecret "9478b869b379427b48d5e76eeca02dcc"
+                 :dictakey "3b3d4026-1215-4b7b-b0f1-df622f3b30ae" ;;"bf8b6e9c-2f17-4e28-9d45-d60d9216ba9c"
+                 :aes-iv  "VIU5X1F2S+4Z2XmV1Kh6fQ=="
+                 :aes-key "3l6gbk2uCyHEfXHSEmA5/Jj0YkVN8hbDOqHg6noBT+G82urT7y+elvxqAlOWeQ/gv4DY44Z4wodC5IrHOCFMtA=="
+                 :user-agent "JobsSpecialUserAgent"
+                 :akey-window "15"
+              }
+
+  :keycloak   { :auth-server-url  "http://localhost:9001/"
+                :admin-realm      "master"
+                :realm            "mjobs"
+                :admin-username   "admin"
+                :admin-password   "newpwd"
+                :client-admin-cli "admin-cli"
+                :client-id        "cjobs"
+                :client-secret    "kv2wKUxSl4QufRt4D7p7YwlJOuLhjyWV"}
+  :ratelimit  { 
+                :limit-id         "100"
+              }
+
+  :sqlite     { 
+                :time-window-minutes "15"
+              }
+}

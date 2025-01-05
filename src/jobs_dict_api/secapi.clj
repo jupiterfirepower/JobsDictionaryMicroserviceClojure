@@ -11,7 +11,7 @@
 (def ^:const str_empty "")
 
 (def settings
-    (clojure.edn/read-string (slurp "src/settings.edn")))
+    (clojure.edn/read-string (slurp "resources/settings.edn")))
 
 (def keycloak-settings
      (:keycloak settings))
@@ -134,8 +134,10 @@
        (prn (format "akey-%s" akey))
        {:akey akey :valid apk_valid})
      (catch clojure.lang.ExceptionInfo e
+            (prn "clojure.lang.ExceptionInfo e: " e)
             {:akey "incorrect apikey not decrypted" :valid false})
      (catch Exception e ;;(prn "catch e: " e)
+            (prn "catch e: " e)
             {:akey "incorrect apikey not decrypted" :valid false})))
 
 (defn is-nonce-valid
@@ -181,9 +183,9 @@
          ktoken_valid (is-keycloak-token-valid token)
        ] 
        ;;(prn request)
-       (prn ua_valid)
-       (prn apk)
-       (prn skk_valid)
-       (prn nonce_valid)
-       (prn ktoken_valid)
+       (prn "user-agent: " ua_valid)
+       (prn "api-key: " apk)
+       (prn "secret: " skk_valid)
+       (prn "nonce: " nonce_valid)
+       (prn "keycloak-token: "  ktoken_valid)
        (every? true? [ua_valid (:valid apk) skk_valid nonce_valid ktoken_valid])))

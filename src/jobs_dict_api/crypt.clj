@@ -5,7 +5,7 @@
             [buddy.core.hash :as hash]
             [clojure.data.codec.base64 :as b64]))
 
-(def ^:private config (clojure.edn/read-string (slurp "src/settings.edn")))
+(def ^:private config (clojure.edn/read-string (slurp "resources/settings.edn")))
 
 (defn from-base64-bytes [original]
       (b64/decode (.getBytes original)))

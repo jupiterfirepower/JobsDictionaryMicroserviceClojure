@@ -9,7 +9,7 @@
 ;; :db/id 1
 (def one-minute-in-miliseconds 60000)
 
-(def ^:private config (clojure.edn/read-string (slurp "src/settings.edn")))
+(def ^:private config (clojure.edn/read-string (slurp "resources/settings.edn")))
 
 (def ^:private akey-window
     (Long/parseLong (:akey-window (:secrets config))))

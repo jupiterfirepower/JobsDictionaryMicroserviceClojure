@@ -22,31 +22,15 @@
             [jobs-dict-api.inceptors :as incp]
             [clojure.core.cache.wrapped :as w]
             [clojure.edn :as edn]
-            [clojure.core.async :as async
-             :refer [>! <! >!! <!! go chan buffer close! alts!! take!]]
+            ;;[clojure.core.async :as async
+             ;;:refer [>! <! >!! <!! go chan buffer close! alts!! take!]]
+            [clojure.tools.logging :as log]
             ))
 
 (def db-config
-     (:postgresdb (edn/read-string (slurp "src/settings.edn"))))
+     (:postgresdb (edn/read-string (slurp "resources/settings.edn"))))
 
 (def db (jdbc/get-datasource db-config))
-
-(defn get-headers-new
-  [request]
-  (let [ ua_valid (sapi/is-useragent-valid request)
-         apk (sapi/is-apikey-valid request)
-         skk_valid (sapi/is-secret-valid request)
-         nonce_valid (sapi/is-nonce-valid request)
-         token (sapi/get-keycloak-token request)
-         ktoken_valid (sapi/is-keycloak-token-valid token)
-       ] 
-       ;;(prn request)
-       (prn ua_valid)
-       (prn apk)
-       (prn skk_valid)
-       (prn nonce_valid)
-       (prn ktoken_valid)
-       (every? true? [ua_valid (:valid apk) skk_valid nonce_valid ktoken_valid])))
 
 (defn get-http-status
     [request_valid]
@@ -66,11 +50,12 @@
   (let [guid   (gen/guid)
         guids  (clojure.string/replace guid #"-" "")
        ]
+  (prn guid)
   (prn (format "nonce-%s"(sapi/to-base64-from-codec (.getBytes (nonce/get-nonce)))))
   ;;()
-  (prn (sapi/to-base64-from-bytes aeskey))
-  (prn (format "encrypted-%s"(sapi/to-base64-from-codec "16de814afaf3a815a8b6a9e99410c5c8" aeskey)))
-  (prn (format "encrypted-%s"(sapi/to-base64-from-codec "9478b869b379427b48d5e76eeca02dcc" aeskey)))))
+  ;;(prn (sapi/to-base64-from-bytes aeskey))
+  (prn (format "encrypted-%s"(sapi/to-base64-from-codec "3b3d4026-1215-4b7b-b0f1-df622f3b30ae")))
+  (prn (format "encrypted-%s"(sapi/to-base64-from-codec "9478b869b379427b48d5e76eeca02dcc")))))
 
 ;;(defn wtype-data
 ;;  [request]
@@ -79,36 +64,48 @@
 ;;        req_auth (authenticated? request)
 ;;        result (if (and (= req_valid true) (= req_auth true)) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
 ;;        (response_with_status req_valid (json/write-str result))))
+;;   (prn ":identity - " (:identity request))
+;;  (prn ":req_valid - " (:req_valid request))
 
 (def cache-data (w/fifo-cache-factory { :wtype (jdbc/execute! db ["select * from fn_get_worktypes();"])
                                         :etype (jdbc/execute! db ["select * from fn_get_empltypes();"]) }))
 
+(defonce ^:const str_empty "")   
+
+(defn type-data
+  [request data-type-keyword]
+  (log/info ":identity - " (:identity request))
+  (let [req_valid (:req_valid request)
+        req_auth (authenticated? request)
+        req_valid_res (and req_valid req_auth)
+        result (if req_valid_res (w/lookup cache-data data-type-keyword) str_empty)]
+      (response_with_status req_valid_res (json/write-str result))))
+
 (defn wtype-data
   [request]
-  (prn request)
-  (prn (:identity request))
-  (prn ":req_valid - " (:req_valid request))
-  (let [req_auth (authenticated? request)
-        result (if (= req_auth true) (w/lookup cache-data :wtype) nil)]
-        (response_with_status req_auth (json/write-str result))))
+  ;;(prn ":identity - " (:identity request))
+  (log/info ":identity - " (:identity request))
+  (let [req_valid (:req_valid request)
+        req_auth (authenticated? request)
+        req_valid_res (and req_valid req_auth)
+        result (if req_valid_res (w/lookup cache-data :wtype) str_empty)]
+      (response_with_status req_valid_res (json/write-str result))))
 
-;;(defn wtype-data
-; ; [request]
- ;; (prn (:identity request))
- ;; (let [req_auth (authenticated? request)
-  ;;      result (if (= req_auth true) (jdbc/execute! db ["select * from fn_get_worktypes()"]) nil)]
-   ;;     (response_with_status req_auth (json/write-str result))))
-    
 (defn etype-data
   [request]
-  (let [req_valid (get-headers-new request)
-        result (if (= req_valid true) (jdbc/execute! db ["select * from fn_get_empltypes()"]) nil)]
-      (response_with_status req_valid (json/write-str result))))
+  (log/info ":identity - " (:identity request))
+  (get-headers-str request)
+  (type-data request :etype))
+  ;;(let [req_valid (:req_valid request)
+  ;;      req_auth (authenticated? request)
+  ;;      req_valid_res (and req_valid req_auth)
+  ;;      result (if req_valid_res (w/lookup cache-data :etype) str_empty)]
+  ;;    (response_with_status req_valid_res (json/write-str result))))
 
 ;; Defines "/" and "/about" routes with their associated :get handlers.
 ;; The interceptors defined after the verb map (e.g., {:get home-page}
 ;; apply to / and its children (/about).
-(def common-interceptors [(body-params/body-params) http/html-body]) ;; incp/rate-limit-interceptor
+(def common-interceptors [(body-params/body-params) http/html-body])
 (def custom-interceptors [ incp/rate-limit-interceptor incp/coerce-body-interceptor incp/content-negotiation-interceptor 
                            incp/check-headers-interceptor incp/validate-headers-interceptor incp/authentication-interceptor 
                            (body-params/body-params) incp/content-length-json-body ])

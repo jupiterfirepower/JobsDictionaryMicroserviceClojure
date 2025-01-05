@@ -76,7 +76,7 @@
        (update-in [:response] coerce-to (accepted-type context))))})
 
 (def settings
-    (clojure.edn/read-string (slurp "src/settings.edn")))
+    (clojure.edn/read-string (slurp "resources/settings.edn")))
 
 (def ratelimit-settings
      (:ratelimit settings))
@@ -144,7 +144,7 @@
      :enter (fn [context]
               (let [request (:request context)
                     req_valid (:req_valid request)
-                    is_req_valid (sapi/validate-headers-value (:request context))
+                    is_req_valid (sapi/validate-headers-value request)
                     req (assoc request :req_valid (and req_valid is_req_valid))
                     ]
                 (assoc-in context [:request] req)))}))

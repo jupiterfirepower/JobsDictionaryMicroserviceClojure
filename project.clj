@@ -17,6 +17,8 @@
                  ;; ---------------------------------
                  ;;[alaisi/postgres.async "0.8.0"]
                  [com.h2database/h2 "2.3.232"]
+                 [org.clojure/core.cache "1.1.234"]
+                 [org.clojure/tools.logging "1.3.0"]
                  [io.staticweb/rate-limit "1.1.0"]
                  [likid_geimfari/secrets "2.1.1"]
                  [cheshire "5.13.0"]
@@ -25,14 +27,15 @@
                  [org.xerial/sqlite-jdbc "3.47.1.0"]
                  [mount "0.1.20"]
                  [org.clojure/java.jdbc "0.7.12"]
-                 [cljc.java-time "0.1.18"]
+                 ;;[cljc.java-time "0.1.18"]
                  [org.clojure/data.codec "0.1.1"]
                  [buddy/buddy-core "1.11.423"]
                  [org.clojars.amjil/buddy-auth "2.1.0"]
                  [com.datomic/datomic-free "0.9.5697"]
-                 [ch.qos.logback/logback-classic "1.4.6"]
-                 [keycloak-clojure "1.31.2"]
+                 
+                 [keycloak-clojure "1.31.2"] ;; KEYCLOAK
                  ;;[ch.qos.logback/logback-classic "1.2.10" :exclusions [org.slf4j/slf4j-api]]
+                 [ch.qos.logback/logback-classic "1.4.6"]
                  [org.slf4j/jul-to-slf4j "1.7.35"]
                  [org.slf4j/jcl-over-slf4j "1.7.35"]
                  [org.slf4j/log4j-over-slf4j "1.7.35"]
